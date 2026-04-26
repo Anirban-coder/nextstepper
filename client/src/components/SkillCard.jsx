@@ -1,30 +1,20 @@
 function SkillCard({ careerId, skillProgress, onUpdate }) {
   const { skill, status } = skillProgress;
+  const statusClass =
+    status === "Completed" ? "done" : status === "In Progress" ? "progress" : "todo";
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "10px 0",
-        borderBottom: "1px solid #eee",
-      }}
-    >
-      <div>
+    <div className="skill-card">
+      <div className="skill-card-copy">
         <strong>{skill.title}</strong>
-        <div style={{ fontSize: "12px", color: "#666" }}>
-          Status: {status}
-        </div>
+        <div className={`skill-status-badge ${statusClass}`}>{status}</div>
       </div>
 
-      <div>
+      <div className="skill-card-actions">
         {status !== "In Progress" && (
           <button
-            onClick={() =>
-              onUpdate(careerId, skill._id, "In Progress")
-            }
-            style={{ marginRight: "8px" }}
+            onClick={() => onUpdate(careerId, skill._id, "In Progress")}
+            className="skill-action-btn progress"
           >
             Start
           </button>
@@ -32,10 +22,8 @@ function SkillCard({ careerId, skillProgress, onUpdate }) {
 
         {status !== "Completed" && (
           <button
-            onClick={() =>
-              onUpdate(careerId, skill._id, "Completed")
-            }
-            style={{ background: "#4caf50", color: "#fff" }}
+            onClick={() => onUpdate(careerId, skill._id, "Completed")}
+            className="skill-action-btn complete"
           >
             Complete
           </button>

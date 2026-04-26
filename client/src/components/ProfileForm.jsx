@@ -1,15 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 function ProfileForm({ profile, onSave }) {
   const [form, setForm] = useState({
-    fullName: profile?.fullName || "",
-    headline: profile?.headline || "",
-    education: profile?.education || "",
-    experienceLevel: profile?.experienceLevel || "Beginner",
-    goals: profile?.goals || "",
-    availability: profile?.availability || "",
-    targetRoles: profile?.targetRoles || "",
+    fullName: "",
+    headline: "",
+    education: "",
+    experienceLevel: "Beginner",
+    goals: "",
+    availability: "",
+    targetRoles: "",
   });
+  const [resume, setResume] = useState(null);
+
+  useEffect(() => {
+    setForm({
+      fullName: profile?.fullName || "",
+      headline: profile?.headline || "",
+      education: profile?.education || "",
+      experienceLevel: profile?.experienceLevel || "Beginner",
+      goals: profile?.goals || "",
+      availability: profile?.availability || "",
+      targetRoles: profile?.targetRoles || "",
+    });
+    setResume(null);
+  }, [profile]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -17,51 +31,116 @@ function ProfileForm({ profile, onSave }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(form);
+    onSave({ ...form, resume });
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <label>Full Name</label>
-      <input name="fullName" value={form.fullName} onChange={handleChange} />
+      <div className="profile-form-grid">
+        <div className="profile-field">
+          <label className="profile-label">Full Name</label>
+          <input
+            className="profile-input"
+            name="fullName"
+            value={form.fullName}
+            onChange={handleChange}
+            placeholder="Your full name"
+          />
+        </div>
 
-      <label>Headline</label>
-      <input name="headline" value={form.headline} onChange={handleChange} />
+        <div className="profile-field">
+          <label className="profile-label">Headline</label>
+          <input
+            className="profile-input"
+            name="headline"
+            value={form.headline}
+            onChange={handleChange}
+            placeholder="Aspiring frontend developer, data analyst, ..."
+          />
+        </div>
 
-      <label>Education</label>
-      <input name="education" value={form.education} onChange={handleChange} />
+        <div className="profile-field">
+          <label className="profile-label">Education</label>
+          <input
+            className="profile-input"
+            name="education"
+            value={form.education}
+            onChange={handleChange}
+            placeholder="B.Tech CSE, self-taught, bootcamp, ..."
+          />
+        </div>
 
-      <label>Experience Level</label>
-      <select
-        name="experienceLevel"
-        value={form.experienceLevel}
-        onChange={handleChange}
-      >
-        <option>Beginner</option>
-        <option>Intermediate</option>
-        <option>Advanced</option>
-      </select>
+        <div className="profile-field">
+          <label className="profile-label">Experience Level</label>
+          <select
+            className="profile-select"
+            name="experienceLevel"
+            value={form.experienceLevel}
+            onChange={handleChange}
+          >
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+          </select>
+        </div>
 
-      <label>Goals</label>
-      <textarea name="goals" value={form.goals} onChange={handleChange} />
+        <div className="profile-field full">
+          <label className="profile-label">Goals</label>
+          <textarea
+            className="profile-textarea"
+            name="goals"
+            value={form.goals}
+            onChange={handleChange}
+            placeholder="Describe the role you want, the skills you want to build, and the timeline you are aiming for."
+          />
+        </div>
 
-      <label>Availability (hours/week)</label>
-      <input
-        name="availability"
-        value={form.availability}
-        onChange={handleChange}
-      />
+        <div className="profile-field">
+          <label className="profile-label">Availability (hours/week)</label>
+          <input
+            className="profile-input"
+            name="availability"
+            value={form.availability}
+            onChange={handleChange}
+            placeholder="8-12"
+          />
+        </div>
 
-      <label>Target Roles</label>
-      <input
-        name="targetRoles"
-        value={form.targetRoles}
-        onChange={handleChange}
-      />
+        <div className="profile-field">
+          <label className="profile-label">Target Roles</label>
+          <input
+            className="profile-input"
+            name="targetRoles"
+            value={form.targetRoles}
+            onChange={handleChange}
+            placeholder="Frontend Developer, Product Designer"
+          />
+        </div>
 
-      <button type="submit" style={{ marginTop: "12px" }}>
-        Save Profile
-      </button>
+        <div className="profile-field full">
+          <label className="profile-label">Resume</label>
+          <div className="profile-resume-box">
+            {profile?.resumeFileName ? (
+              <p className="mini-note">Current file: {profile.resumeFileName}</p>
+            ) : (
+              <p className="mini-note">No resume uploaded yet.</p>
+            )}
+            <input
+              className="profile-file"
+              type="file"
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => setResume(e.target.files?.[0] || null)}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="profile-save-row">
+        <p className="mini-note">Save text updates alone, or replace the resume in the same step.</p>
+        <button type="submit" className="primary-btn">
+          Save Profile
+        </button>
+      </div>
     </form>
   );
 }

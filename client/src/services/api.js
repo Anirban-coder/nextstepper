@@ -1,150 +1,111 @@
-const BASE_URL = "http://localhost:5000/api";
+import axios from "axios";
 
-// Helper to get token
-const getToken = () => localStorage.getItem("token");
+// 1. Create Axios Instance
+const api = axios.create({
+  baseURL: "http://localhost:5000/api",
+});
 
-// LOGIN
-export const loginUser = async (data) => {
-  const res = await fetch(`${BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) throw new Error("Login failed");
-  return res.json();
-};
-
-// REGISTER
-export const registerUser = async (data) => {
-  const res = await fetch(`${BASE_URL}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) throw new Error("Register failed");
-  return res.json();
-};
-
-// GET DASHBOARD
-export const getDashboardData = async () => {
-  const res = await fetch(`${BASE_URL}/users/dashboard`, {
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch dashboard");
+// 2. Add Token Automatically to EVERY request
+// This replaces the need to manually add headers in every function
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
+  return config;
+});
 
-  return res.json();
-};
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
 
-// GET CAREERS
-export const getCareers = async () => {
-  const res = await fetch(`${BASE_URL}/careers`);
-
-  if (!res.ok) throw new Error("Failed to fetch careers");
-  return res.json();
-};
-
-// SELECT CAREER
-export const selectCareer = async (careerId) => {
-  const res = await fetch(`${BASE_URL}/users/select-career`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify({ careerId }),
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    if (data.message === "Career already added") {
-      return data;
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
-    throw new Error(data.message || "Failed to select career");
-  }
 
-  return data;
+    return Promise.reject(error);
+  }
+);
+
+// ================= AUTH =================
+export const loginUser = async (data) => {
+  const response = await api.post("/auth/login", data);
+  return response.data;
 };
 
-// UPDATE SKILL PROGRESS 
+export const registerUser = async (data) => {
+  // Axios automatically handles FormData for file uploads
+  // Do not manually set Content-Type here, let Axios do it
+  const response = await api.post("/auth/register", data);
+  return response.data;
+};
+
+// ================= USER & DASHBOARD =================
+export const getDashboardData = async () => {
+  const response = await api.get("/users/dashboard");
+  return response.data;
+};
+
+export const selectCareer = async (careerId) => {
+  const response = await api.post("/users/select-career", { careerId });
+  return response.data;
+};
+
 export const updateSkillProgress = async (careerId, skillId, status) => {
-  const res = await fetch(`${BASE_URL}/users/skill-progress`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify({
-      careerId,
-      skillId,
-      status,
-    }),
+  const response = await api.put("/users/skill-progress", {
+    careerId,
+    skillId,
+    status,
   });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.message || "Failed to update skill");
-  }
-
-  return data;
+  return response.data;
 };
-// GET PROFILE
+
+// ================= PROFILE & RESUME =================
 export const getProfile = async () => {
-  const res = await fetch(`${BASE_URL}/profile/me`, {
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-
-  if (!res.ok) throw new Error("Failed to fetch profile");
-  return res.json();
+  const response = await api.get("/profile/me");
+  return response.data;
 };
 
-// UPDATE PROFILE
 export const updateProfile = async (profileData) => {
-  const res = await fetch(`${BASE_URL}/profile/me`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-    body: JSON.stringify(profileData),
-  });
-
-  if (!res.ok) throw new Error("Failed to update profile");
-  return res.json();
+  const response = await api.put("/profile/me", profileData);
+  return response.data;
 };
-// GET RESUME
+
 export const getResume = async () => {
-  const res = await fetch(`${BASE_URL}/resume`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-
-  if (!res.ok) throw new Error("Failed to fetch resume");
-  return res.json();
+  const response = await api.get("/resume");
+  return response.data;
 };
 
-// UPDATE RESUME
 export const updateResume = async (data) => {
-  const res = await fetch(`${BASE_URL}/resume`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) throw new Error("Failed to update resume");
-  return res.json();
+  const response = await api.put("/resume", data);
+  return response.data;
 };
+
+// ================= AI INSIGHTS =================
+export const getAIInsights = async () => {
+  const response = await api.post("/ai/insights");
+  return response.data;
+};
+
+// ================= TEACHER: CREATE COURSE =================
+export const createCareer = async (careerData) => {
+  const response = await api.post("/careers", careerData);
+  return response.data;
+};
+
+export const createSkill = async (skillData) => {
+  const response = await api.post("/skills", skillData);
+  return response.data;
+};
+
+// ================= GENERAL =================
+export const getCareers = async () => {
+  const response = await api.get("/careers");
+  return response.data;
+};
+
+export default api;

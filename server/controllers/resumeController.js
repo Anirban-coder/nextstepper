@@ -1,53 +1,82 @@
 const Resume = require("../models/Resume");
-const calculateResumeCompletion = require("../utils/calculateResumeCompletion");
-const createNotification = require("../utils/createNotification");
+// const User = require("../models/User"); // Not currently needed, but fine to keep
 
-// ================= GET MY RESUME =================
-exports.getMyResume = async (req, res) => {
+// Function 1: Get Resume
+const getResume = async (req, res) => {
   try {
-    const resume = await Resume.findOne({ user: req.user._id })
-      .populate("skills");
-
+    // We use findOne because a user only has ONE resume
+    const resume = await Resume.findOne({ user: req.user.id });
     if (!resume) {
-      return res.status(404).json({ message: "Resume not found" });
+      // If no resume exists, return an empty structure so frontend doesn't break
+      return res.json({ skills: [], user: req.user.id });
     }
-
     res.json(resume);
-  } catch (error) {
-    console.error("Get resume error:", error);
-    res.status(500).json({ message: "Server error" });
+  } catch (err) {
+    console.error("Get Resume Error:", err.message);
+    res.status(500).send("Server Error");
   }
 };
 
-// ================= UPDATE MY RESUME =================
-exports.updateMyResume = async (req, res) => {
+// Function 2: Update Resume (Bulk)
+const updateResumeSkills = async (req, res) => {
   try {
-    const resume = await Resume.findOne({ user: req.user._id });
+    const { skills } = req.body;
+    let resume = await Resume.findOne({ user: req.user.id });
 
     if (!resume) {
-      return res.status(404).json({ message: "Resume not found" });
+      resume = new Resume({
+        user: req.user.id,
+        skills: skills,
+        completionPercentage: 0 
+      });
+    } else {
+      resume.skills = skills;
     }
 
-    // Allow partial updates
-    Object.assign(resume, req.body);
-    resume.completionPercentage = calculateResumeCompletion(resume);
+    await resume.save();
+    res.json(resume);
+  } catch (err) {
+    console.error("Update Resume Error:", err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+// 👇 Function 3: The Missing Logic for "Complete" Button
+const updateSkillStatus = async (req, res) => {
+  try {
+    // Frontend sends: { skillId: "HTML", status: "Completed" }
+    const { skillId, status } = req.body; 
+
+    let resume = await Resume.findOne({ user: req.user.id });
+
+    if (!resume) {
+      // Create new resume if it doesn't exist yet
+      resume = new Resume({ user: req.user.id, skills: [] });
+    }
+
+    // Check if skill already exists in the resume
+    const skillIndex = resume.skills.findIndex((s) => s.skillId === skillId);
+
+    if (skillIndex > -1) {
+      // Update existing skill
+      resume.skills[skillIndex].status = status;
+    } else {
+      // Add new skill
+      resume.skills.push({ skillId, status });
+    }
 
     await resume.save();
-    if (resume.completionPercentage >= 50) {
-  await createNotification({
-    userId: req.user._id,
-    title: "Resume Progress 🚀",
-    message: `Your resume is now ${resume.completionPercentage}% complete`,
-    type: "resume",
-  });
-}
- 
-    res.json({
-      message: "Resume updated successfully",
-      resume,
-    });
-  } catch (error) {
-    console.error("Update resume error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.json(resume);
+    
+  } catch (err) {
+    console.error("Skill Update Error:", err.message);
+    res.status(500).send("Server Error");
   }
+};
+
+// ✅ EXPORT ALL 3 FUNCTIONS
+module.exports = {
+  getResume,
+  updateResumeSkills,
+  updateSkillStatus // <--- Don't forget this!
 };

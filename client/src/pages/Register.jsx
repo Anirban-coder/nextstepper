@@ -3,76 +3,195 @@ import { registerUser } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
 
 function Register() {
-  const [form, setForm] = useState({
+  const navigate = useNavigate();
+  const [role, setRole] = useState("student");
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
+    gender: "select",
+    expertise: "",
+    experience: "",
   });
+  const [resume, setResume] = useState(null);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e) => {
+    setResume(e.target.files[0]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
-      await registerUser(form);
+      const dataPayload = new FormData();
+      dataPayload.append("name", formData.name);
+      dataPayload.append("email", formData.email);
+      dataPayload.append("password", formData.password);
+      dataPayload.append("role", role);
+
+      if (role === "student") {
+        dataPayload.append("gender", formData.gender);
+        if (resume) {
+          dataPayload.append("resume", resume);
+        }
+      } else {
+        dataPayload.append("expertise", formData.expertise);
+        dataPayload.append("experience", formData.experience);
+      }
+
+      await registerUser(dataPayload);
+      alert("Registration Successful! Please Login.");
       navigate("/login");
     } catch (err) {
-      setError("Registration failed");
+      console.error(err);
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "80px auto" }}>
-      <h2>Create Your Account</h2>
+    <div className="auth-shell">
+      <section className="auth-showcase">
+        <div className="auth-showcase-card">
+          <span className="auth-badge">Start strong</span>
+          <h1 className="auth-hero-title">Turn effort into a visible path.</h1>
+          <p className="auth-hero-copy">
+            Whether you are learning or teaching, this platform should feel like something worth opening every day.
+          </p>
+          <div className="auth-points">
+            <div className="auth-point">
+              <strong>Students</strong>
+              <p>
+                Upload your resume, choose a path, and let the system personalize your next moves.
+              </p>
+            </div>
+            <div className="auth-point">
+              <strong>Teachers</strong>
+              <p>
+                Publish tracks that feel structured, motivating, and clear.
+              </p>
+            </div>
+            <div className="auth-point">
+              <strong>Momentum</strong>
+              <p>
+                Your dashboard should feel less like admin work and more like progress.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <section className="auth-panel">
+        <div className="auth-form-card register-wide glass-panel">
+          <span className="section-kicker">Join NextStepper</span>
+          <h2 className="auth-title">Create a beautiful starting point.</h2>
+          <p className="auth-subtitle">
+            Pick your role, add the right context, and we will shape the experience around how you learn or teach.
+          </p>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Name"
-          value={form.name}
-          onChange={handleChange}
-          required
-          style={{ width: "100%", marginBottom: "10px" }}
-        />
+          <div className="auth-toggle">
+            <button
+              type="button"
+              className={`auth-toggle-btn${role === "student" ? " active" : ""}`}
+              onClick={() => setRole("student")}
+            >
+              Student
+            </button>
+            <button
+              type="button"
+              className={`auth-toggle-btn${role === "teacher" ? " active" : ""}`}
+              onClick={() => setRole("teacher")}
+            >
+              Teacher
+            </button>
+          </div>
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-          style={{ width: "100%", marginBottom: "10px" }}
-        />
+          {error && <p className="auth-error">{error}</p>}
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-          style={{ width: "100%", marginBottom: "10px" }}
-        />
+          <form onSubmit={handleSubmit} encType="multipart/form-data">
+            <div className="auth-form-grid two-col">
+              <div className="auth-field">
+                <label className="auth-label">Full Name</label>
+                <input className="auth-input" name="name" type="text" onChange={handleChange} required />
+              </div>
 
-        <button type="submit" style={{ width: "100%" }}>
-          Register
-        </button>
-      </form>
+              <div className="auth-field">
+                <label className="auth-label">Email Address</label>
+                <input className="auth-input" name="email" type="email" onChange={handleChange} required />
+              </div>
 
-      <p style={{ marginTop: "12px" }}>
-        Already have an account?{" "}
-        <Link to="/login">Login</Link>
-      </p>
+              <div className="auth-field full">
+                <label className="auth-label">Password</label>
+                <input className="auth-input" name="password" type="password" onChange={handleChange} required />
+              </div>
+
+              {role === "student" && (
+                <>
+                  <div className="auth-field">
+                    <label className="auth-label">Gender</label>
+                    <select className="auth-select" name="gender" onChange={handleChange} required>
+                      <option value="select">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="auth-field full">
+                    <label className="auth-label">Upload Resume</label>
+                    <p className="mini-note">Optional, but it unlocks far better AI guidance later.</p>
+                    <input className="auth-file" type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} />
+                  </div>
+                </>
+              )}
+
+              {role === "teacher" && (
+                <>
+                  <div className="auth-field full">
+                    <label className="auth-label">Area of Expertise</label>
+                    <input
+                      className="auth-input"
+                      name="expertise"
+                      placeholder="Web Development, Data Science, Cloud"
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="auth-field full">
+                    <label className="auth-label">Years of Experience</label>
+                    <input
+                      className="auth-input"
+                      name="experience"
+                      type="number"
+                      placeholder="5"
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button type="submit" disabled={loading} className="primary-btn" style={{ width: "100%", marginTop: "22px" }}>
+              {loading ? "Creating Account..." : `Register as ${role === "student" ? "Student" : "Teacher"}`}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

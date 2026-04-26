@@ -1,15 +1,21 @@
 const User = require("../models/User");
 const Skill = require("../models/Skill");
-const syncResumeSkills = require("../utils/syncResumeSkills");
-// SELECT CAREER (creates a new learning track)
+
+// 1. SELECT CAREER
 exports.selectCareer = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { careerId } = req.body;
+    // SAFE ID CHECK: Try .id, then ._id, then fail if neither exists
+    const userId = req.user.id || req.user._id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized: No User ID found in request" });
+    }
 
+    const { careerId } = req.body;
     const user = await User.findById(userId);
 
-    // Prevent duplicate career
+    if (!user) return res.status(404).json({ message: "User not found" });
+
     const alreadyExists = user.learningTracks.some(
       (track) => track.career.toString() === careerId
     );
@@ -19,7 +25,6 @@ exports.selectCareer = async (req, res) => {
     }
 
     const skills = await Skill.find({ career: careerId });
-
     const skillsProgress = skills.map((skill) => ({
       skill: skill._id,
       status: "Not Started",
@@ -31,81 +36,94 @@ exports.selectCareer = async (req, res) => {
     });
 
     await user.save();
-    await syncResumeSkills(user._id, user.learningTracks);
-    res.json({
-      message: "Career added successfully",
-      learningTracks: user.learningTracks,
-    });
+    res.json({ message: "Career added successfully", learningTracks: user.learningTracks });
+
   } catch (error) {
+    console.error("Select Career Error:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// UPDATE SKILL STATUS
+// 2. UPDATE SKILL STATUS (The one causing the error)
 exports.updateSkillProgress = async (req, res) => {
   try {
     const { careerId, skillId, status } = req.body;
-    const user = await User.findById(req.user._id);
+    
+    // SAFE ID CHECK
+    const userId = req.user.id || req.user._id;
+    
+    console.log("🔹 START UPDATE:");
+    console.log(`   User ID: ${userId}`);
+    console.log(`   Career ID: ${careerId}`);
+    console.log(`   Skill ID: ${skillId}`);
+    console.log(`   New Status: ${status}`);
 
-    const track = user.learningTracks.find(
-      (t) => t.career.toString() === careerId
-    );
+    if (!userId) {
+      console.error("❌ Error: User ID is missing from req.user");
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
+    // 1. Find User
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error("❌ Error: User not found in DB");
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 2. Find Track
+    // We filter carefully to ensure we don't crash if career is null
+    const track = user.learningTracks.find(t => t.career && t.career.toString() === careerId);
+    
     if (!track) {
-      return res.status(404).json({ message: "Career not found" });
+      console.error("❌ Error: Track not found. Available tracks:", user.learningTracks.map(t => t.career));
+      return res.status(404).json({ message: "Track not found" });
     }
 
-    const skill = track.skills.find(
-      (s) => s.skill.toString() === skillId
+    // 3. Find Skill
+    const skillEntry = track.skills.find(s => 
+      (s.skill && s.skill.toString() === skillId) || 
+      (s._id && s._id.toString() === skillId)
     );
 
-    if (!skill) {
-      return res.status(404).json({ message: "Skill not found" });
+    if (!skillEntry) {
+      console.error("❌ Error: Skill not found in track.");
+      return res.status(404).json({ message: "Skill not found in track" });
     }
 
-    skill.status = status;
+    // 4. Update
+    skillEntry.status = status;
     await user.save();
-    if (status === "Completed") {
-      await createNotification({
-        userId: req.user._id,
-        title: "Skill Completed 🎉",
-        message: "Great job! You completed a new skill.",
-        type: "skill",
-      });
-    }
-    await syncResumeSkills(user._id, user.learningTracks);
-    res.json({ message: "Skill updated" });
+    
+    console.log("✅ Update Successful!");
+    res.json(user);
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("🔥 CRITICAL SERVER ERROR:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-// DASHBOARD DATA
+// 3. DASHBOARD
 exports.getDashboard = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
+    const userId = req.user.id || req.user._id;
+
+    const user = await User.findById(userId)
       .select("-password")
       .populate("learningTracks.career", "title description")
       .populate("learningTracks.skills.skill", "title level order");
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     let totalSkills = 0;
     let completedSkills = 0;
 
     user.learningTracks.forEach((track) => {
       totalSkills += track.skills.length;
-      completedSkills += track.skills.filter(
-        (s) => s.status === "Completed"
-      ).length;
+      completedSkills += track.skills.filter((s) => s.status === "Completed").length;
     });
 
-    const progressPercentage =
-      totalSkills === 0
-        ? 0
-        : Math.round((completedSkills / totalSkills) * 100);
+    const progressPercentage = totalSkills === 0 ? 0 : Math.round((completedSkills / totalSkills) * 100);
 
     res.json({
       learningTracks: user.learningTracks,
@@ -116,6 +134,7 @@ exports.getDashboard = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Dashboard Error:", error);
     res.status(500).json({ message: error.message });
   }
 };

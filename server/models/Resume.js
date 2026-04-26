@@ -1,37 +1,19 @@
 const mongoose = require("mongoose");
 
-const projectSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  techStack: [String],
-  link: String,
-});
-
-const experienceSchema = new mongoose.Schema({
-  company: String,
-  role: String,
-  startDate: Date,
-  endDate: Date,
-  description: String,
-});
-
-const educationSchema = new mongoose.Schema({
-  institution: String,
-  degree: String,
-  startYear: Number,
-  endYear: Number,
-});
+// ... (Keep your projectSchema, experienceSchema, educationSchema as they are) ...
+// I will just show the main Resume Schema update:
 
 const resumeSchema = new mongoose.Schema(
   {
-    // 🔗 Owner
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+    
+    // 🆕 NEW FIELD: Path to the uploaded file
+    fileUrl: { type: String }, 
 
-    // 👤 Basic Info
     personalInfo: {
       fullName: String,
       email: String,
@@ -41,36 +23,12 @@ const resumeSchema = new mongoose.Schema(
       github: String,
       portfolio: String,
     },
-
-    // ✍️ Summary (AI will improve later)
-    summary: {
-      type: String,
-      default: "",
-    },
-
-    // 🧠 Skills (linked to Skill model)
-    skills: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Skill",
-      },
-    ],
-
-    // 🛠 Projects
-    projects: [projectSchema],
-
-    // 💼 Experience
-    experience: [experienceSchema],
-
-    // 🎓 Education
-    education: [educationSchema],
-
-    // 📊 Metadata
-    completionPercentage: {
-      type: Number,
-      default: 0,
-    },
-
+    
+    summary: { type: String, default: "" },
+    
+    // ... Keep the rest of your schema (skills, projects, etc.) same as before ...
+    skills: [{ type: mongoose.Schema.Types.ObjectId, ref: "Skill" }],
+    completionPercentage: { type: Number, default: 0 },
     lastGeneratedAt: Date,
   },
   { timestamps: true }

@@ -1,22 +1,32 @@
-import ProgressBar from "./ProgressBar";
-
 function CareerAnalytics({ track }) {
-  const completed = track.skills.filter(s => s.status === "Completed").length;
-  const total = track.skills.length;
-  const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const title = track?.career?.title || "Untitled Track";
+  const skills = track?.skills || [];
+  const totalSkills = skills.length;
+  const completedSkills = skills.filter((skill) => skill.status === "Completed").length;
+  const inProgressSkills = skills.filter((skill) => skill.status === "In Progress").length;
+  const percent = totalSkills === 0 ? 0 : Math.round((completedSkills / totalSkills) * 100);
 
   return (
-    <div
-      style={{
-        border: "1px solid #ccc",
-        padding: "16px",
-        marginBottom: "12px",
-        borderRadius: "8px",
-      }}
-    >
-      <h3>{track.career.title}</h3>
-      <ProgressBar percentage={percent} />
-      <p>{completed} / {total} skills completed</p>
+    <div className="career-analytics-card">
+      <div className="career-analytics-header">
+        <div>
+          <h3 style={{ marginBottom: "8px" }}>{title}</h3>
+          <p className="mini-note">
+            {completedSkills} of {totalSkills} skills completed
+          </p>
+        </div>
+        <strong style={{ fontSize: "1.4rem", color: "var(--accent)" }}>{percent}%</strong>
+      </div>
+
+      <div className="career-analytics-progress">
+        <div className="progress-bar">
+          <div className="progress-bar-fill" style={{ width: `${percent}%` }} />
+        </div>
+      </div>
+
+      <p className="career-analytics-meta">
+        {inProgressSkills} skill{inProgressSkills === 1 ? "" : "s"} in progress
+      </p>
     </div>
   );
 }

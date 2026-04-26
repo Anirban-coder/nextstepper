@@ -8,21 +8,33 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
 
     if (token) {
-      setUser({ token });
+      try {
+        const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+        setUser(parsedUser ? { ...parsedUser, token } : { token });
+      } catch (error) {
+        setUser({ token });
+      }
     }
 
     setLoading(false);
   }, []);
 
-  const login = (token) => {
+  const login = (token, userData = null) => {
     localStorage.setItem("token", token);
+    if (userData) {
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser({ ...userData, token });
+      return;
+    }
     setUser({ token });
   };
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
   };
 

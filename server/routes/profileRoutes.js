@@ -1,18 +1,18 @@
 const express = require("express");
-const { registerUser, loginUser } = require("../controllers/authController");
+const { protect } = require("../middleware/authMiddleware");
 const upload = require("../middleware/upload");
+const { getProfile, updateProfile } = require("../controllers/profileController");
 
 const router = express.Router();
 
-router.post("/register", (req, res, next) => {
+router.get("/me", protect, getProfile);
+router.put("/me", protect, (req, res, next) => {
   upload.single("resume")(req, res, (error) => {
     if (error) {
       return res.status(400).json({ message: error.message });
     }
     next();
   });
-}, registerUser);
-
-router.post("/login", loginUser);
+}, updateProfile);
 
 module.exports = router;

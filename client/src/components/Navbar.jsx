@@ -1,9 +1,17 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const dashboardPath = user?.role === "teacher" ? "/teacher-dashboard" : "/dashboard";
+  const userLabel = user?.name || user?.fullName || user?.email || "Learner";
+  const initials = userLabel
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "N";
 
   const handleLogout = () => {
     logout();
@@ -11,50 +19,57 @@ function Navbar() {
   };
 
   return (
-    <nav
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "12px 20px",
-        borderBottom: "1px solid #ddd",
-      }}
-    >
-      {/* LOGO */}
-      <Link to="/" style={{ fontWeight: "bold", fontSize: "18px" }}>
-        NextStepper
-      </Link>
+    <div className="site-nav-wrap">
+      <nav className="site-nav">
+        <Link to="/" className="site-brand">
+          <span className="site-brand-mark">N</span>
+          <span className="site-brand-copy">
+            <span className="site-brand-name">NextStepper</span>
+            <span className="site-brand-tag">Learning with momentum</span>
+          </span>
+        </Link>
 
-      {/* RIGHT SIDE */}
-      <div style={{ display: "flex", gap: "16px" }}>
-        {!user && (
-          <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
-          </>
-        )}
+        <div className="site-nav-links">
+          {!user && (
+            <>
+              <NavLink to="/login" className={({ isActive }) => `site-nav-link${isActive ? " active" : ""}`}>
+                Login
+              </NavLink>
+              <NavLink to="/register" className={({ isActive }) => `site-nav-link${isActive ? " active" : ""}`}>
+                Register
+              </NavLink>
+            </>
+          )}
 
-        {user && (
-          <>
-            <div>
-          <Link to="/dashboard" style={{ marginRight: "12px" }}>
-            Dashboard
-          </Link>
-          <Link to="/careers" style={{ marginRight: "12px" }}>
-            Careers
-          </Link>
-          <Link to="/analytics" style={{ marginRight: "12px" }}>
-            Analytics
-          </Link>
-          <Link to="/profile" style={{ marginRight: "12px" }}>
-            Profile
-          </Link>
-          <button onClick={handleLogout}>Logout</button>
+          {user && (
+            <>
+              <NavLink to={dashboardPath} className={({ isActive }) => `site-nav-link${isActive ? " active" : ""}`}>
+                Dashboard
+              </NavLink>
+              <NavLink to="/careers" className={({ isActive }) => `site-nav-link${isActive ? " active" : ""}`}>
+                Careers
+              </NavLink>
+              <NavLink to="/analytics" className={({ isActive }) => `site-nav-link${isActive ? " active" : ""}`}>
+                Analytics
+              </NavLink>
+              <NavLink to="/profile" className={({ isActive }) => `site-nav-link${isActive ? " active" : ""}`}>
+                Profile
+              </NavLink>
+              <div className="site-nav-user">
+                <span className="site-nav-avatar">{initials}</span>
+                <span className="site-nav-user-copy">
+                  <span className="site-nav-user-name">{userLabel}</span>
+                  <span className="site-nav-user-role">{user?.role || "member"}</span>
+                </span>
+              </div>
+              <button onClick={handleLogout} className="site-nav-logout">
+                Logout
+              </button>
+            </>
+          )}
         </div>
-          </>
-        )}
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 }
 

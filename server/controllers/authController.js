@@ -1,50 +1,73 @@
 const User = require("../models/User");
-const Resume = require("../models/Resume"); // ✅ ADD THIS
+const Resume = require("../models/Resume");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 // ================= REGISTER =================
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    // 1️⃣ Extract Text Data
+    // Note: When using FormData, numbers come as strings, so we might need to parse them if strictly needed, 
+    // but Mongoose handles casting usually.
+    const { name, email, password, role, gender, expertise, experience } = req.body;
 
-    // 1️⃣ Check if user exists
+    // 2️⃣ Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // 2️⃣ Hash password
+    // 3️⃣ Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 3️⃣ Create user
-    const user = await User.create({
+    // 4️⃣ Create User Object (Dynamic based on role)
+    const userData = {
       name,
       email,
       password: hashedPassword,
-    });
+      role: role || "student", // Default to student
+    };
 
-    // 4️⃣ CREATE RESUME (✅ THIS IS THE NEW PART)
-    const resume = await Resume.create({
-      user: user._id,
-    });
+    if (role === "student") {
+      userData.gender = gender;
+    } else if (role === "teacher") {
+      userData.expertise = expertise;
+      userData.experience = experience;
+    }
 
+    const user = await User.create(userData);
+
+    // 5️⃣ Create Resume (Only if Student OR if file is uploaded)
+    // Even teachers might want a profile, but the file upload is mainly for students per your request.
+    
+    let resumeData = { user: user._id };
+    
+    // If a file was uploaded, save the path
+    if (req.file) {
+      resumeData.fileUrl = req.file.path; // e.g., "uploads/resume-123.pdf"
+    }
+
+    const resume = await Resume.create(resumeData);
+
+    // Link Resume to User
     user.resume = resume._id;
     await user.save();
 
-    // 5️⃣ Respond
+    // 6️⃣ Respond
     res.status(201).json({
       message: "User registered successfully",
       userId: user._id,
+      role: user.role,
     });
+
   } catch (error) {
     console.error("Register error:", error);
     res.status(500).json({ message: error.message });
   }
 };
 
-// ================= LOGIN =================
+// ================= LOGIN (Keep existing) =================
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -60,7 +83,7 @@ exports.loginUser = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id },
+      { id: user._id, role: user.role }, // 👈 Added role to token payload
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -71,6 +94,7 @@ exports.loginUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role, // 👈 Send role to frontend
       },
     });
   } catch (error) {

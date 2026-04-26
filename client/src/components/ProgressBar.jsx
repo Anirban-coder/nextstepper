@@ -1,24 +1,13 @@
 function ProgressBar({ percentage }) {
   return (
-    <div style={{ marginTop: "10px" }}>
-      <div
-        style={{
-          height: "10px",
-          background: "#e0e0e0",
-          borderRadius: "6px",
-          overflow: "hidden",
-        }}
-      >
+    <div className="progress-shell">
+      <div className="progress-bar">
         <div
-          style={{
-            width: `${percentage}%`,
-            height: "100%",
-            background: percentage === 100 ? "#2e7d32" : "#1976d2",
-            transition: "width 0.9s ease",
-          }}
+          className={`progress-bar-fill${percentage === 100 ? " complete" : ""}`}
+          style={{ width: `${percentage}%` }}
         />
       </div>
-      <small style={{ color: "#555" }}>{percentage}% completed</small>
+      <small className="mini-note">{percentage}% completed</small>
     </div>
   );
 }
