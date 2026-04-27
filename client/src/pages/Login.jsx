@@ -62,9 +62,13 @@ function Login() {
 
           <div className="auth-form-grid">
             <div className="auth-field">
-              <label className="auth-label">Email</label>
+              <label className="auth-label" htmlFor="login-email">Email</label>
               <input
+                id="login-email"
                 className="auth-input"
+                name="email"
+                type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
@@ -73,10 +77,13 @@ function Login() {
             </div>
 
             <div className="auth-field">
-              <label className="auth-label">Password</label>
+              <label className="auth-label" htmlFor="login-password">Password</label>
               <input
+                id="login-password"
                 className="auth-input"
+                name="password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Your password"

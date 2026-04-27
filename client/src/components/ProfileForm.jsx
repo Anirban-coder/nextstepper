@@ -38,10 +38,12 @@ function ProfileForm({ profile, onSave }) {
     <form onSubmit={handleSubmit}>
       <div className="profile-form-grid">
         <div className="profile-field">
-          <label className="profile-label">Full Name</label>
+          <label className="profile-label" htmlFor="profile-full-name">Full Name</label>
           <input
+            id="profile-full-name"
             className="profile-input"
             name="fullName"
+            autoComplete="name"
             value={form.fullName}
             onChange={handleChange}
             placeholder="Your full name"
@@ -49,8 +51,9 @@ function ProfileForm({ profile, onSave }) {
         </div>
 
         <div className="profile-field">
-          <label className="profile-label">Headline</label>
+          <label className="profile-label" htmlFor="profile-headline">Headline</label>
           <input
+            id="profile-headline"
             className="profile-input"
             name="headline"
             value={form.headline}
@@ -60,10 +63,12 @@ function ProfileForm({ profile, onSave }) {
         </div>
 
         <div className="profile-field">
-          <label className="profile-label">Education</label>
+          <label className="profile-label" htmlFor="profile-education">Education</label>
           <input
+            id="profile-education"
             className="profile-input"
             name="education"
+            autoComplete="organization"
             value={form.education}
             onChange={handleChange}
             placeholder="B.Tech CSE, self-taught, bootcamp, ..."
@@ -71,8 +76,9 @@ function ProfileForm({ profile, onSave }) {
         </div>
 
         <div className="profile-field">
-          <label className="profile-label">Experience Level</label>
+          <label className="profile-label" htmlFor="profile-experience-level">Experience Level</label>
           <select
+            id="profile-experience-level"
             className="profile-select"
             name="experienceLevel"
             value={form.experienceLevel}
@@ -85,8 +91,9 @@ function ProfileForm({ profile, onSave }) {
         </div>
 
         <div className="profile-field full">
-          <label className="profile-label">Goals</label>
+          <label className="profile-label" htmlFor="profile-goals">Goals</label>
           <textarea
+            id="profile-goals"
             className="profile-textarea"
             name="goals"
             value={form.goals}
@@ -96,8 +103,9 @@ function ProfileForm({ profile, onSave }) {
         </div>
 
         <div className="profile-field">
-          <label className="profile-label">Availability (hours/week)</label>
+          <label className="profile-label" htmlFor="profile-availability">Availability (hours/week)</label>
           <input
+            id="profile-availability"
             className="profile-input"
             name="availability"
             value={form.availability}
@@ -107,8 +115,9 @@ function ProfileForm({ profile, onSave }) {
         </div>
 
         <div className="profile-field">
-          <label className="profile-label">Target Roles</label>
+          <label className="profile-label" htmlFor="profile-target-roles">Target Roles</label>
           <input
+            id="profile-target-roles"
             className="profile-input"
             name="targetRoles"
             value={form.targetRoles}
@@ -118,7 +127,7 @@ function ProfileForm({ profile, onSave }) {
         </div>
 
         <div className="profile-field full">
-          <label className="profile-label">Resume</label>
+          <label className="profile-label" htmlFor="profile-resume">Resume</label>
           <div className="profile-resume-box">
             {profile?.resumeFileName ? (
               <p className="mini-note">Current file: {profile.resumeFileName}</p>
@@ -126,6 +135,7 @@ function ProfileForm({ profile, onSave }) {
               <p className="mini-note">No resume uploaded yet.</p>
             )}
             <input
+              id="profile-resume"
               className="profile-file"
               type="file"
               accept=".pdf,.doc,.docx"

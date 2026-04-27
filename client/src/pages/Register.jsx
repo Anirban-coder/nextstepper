@@ -120,25 +120,49 @@ function Register() {
           <form onSubmit={handleSubmit} encType="multipart/form-data">
             <div className="auth-form-grid two-col">
               <div className="auth-field">
-                <label className="auth-label">Full Name</label>
-                <input className="auth-input" name="name" type="text" onChange={handleChange} required />
+                <label className="auth-label" htmlFor="register-name">Full Name</label>
+                <input
+                  id="register-name"
+                  className="auth-input"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  onChange={handleChange}
+                  required
+                />
               </div>
 
               <div className="auth-field">
-                <label className="auth-label">Email Address</label>
-                <input className="auth-input" name="email" type="email" onChange={handleChange} required />
+                <label className="auth-label" htmlFor="register-email">Email Address</label>
+                <input
+                  id="register-email"
+                  className="auth-input"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  onChange={handleChange}
+                  required
+                />
               </div>
 
               <div className="auth-field full">
-                <label className="auth-label">Password</label>
-                <input className="auth-input" name="password" type="password" onChange={handleChange} required />
+                <label className="auth-label" htmlFor="register-password">Password</label>
+                <input
+                  id="register-password"
+                  className="auth-input"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  onChange={handleChange}
+                  required
+                />
               </div>
 
               {role === "student" && (
                 <>
                   <div className="auth-field">
-                    <label className="auth-label">Gender</label>
-                    <select className="auth-select" name="gender" onChange={handleChange} required>
+                    <label className="auth-label" htmlFor="register-gender">Gender</label>
+                    <select id="register-gender" className="auth-select" name="gender" onChange={handleChange} required>
                       <option value="select">Select Gender</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
@@ -147,9 +171,15 @@ function Register() {
                   </div>
 
                   <div className="auth-field full">
-                    <label className="auth-label">Upload Resume</label>
+                    <label className="auth-label" htmlFor="register-resume">Upload Resume</label>
                     <p className="mini-note">Optional, but it unlocks far better AI guidance later.</p>
-                    <input className="auth-file" type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} />
+                    <input
+                      id="register-resume"
+                      className="auth-file"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleFileChange}
+                    />
                   </div>
                 </>
               )}
@@ -157,10 +187,12 @@ function Register() {
               {role === "teacher" && (
                 <>
                   <div className="auth-field full">
-                    <label className="auth-label">Area of Expertise</label>
+                    <label className="auth-label" htmlFor="register-expertise">Area of Expertise</label>
                     <input
+                      id="register-expertise"
                       className="auth-input"
                       name="expertise"
+                      autoComplete="organization-title"
                       placeholder="Web Development, Data Science, Cloud"
                       onChange={handleChange}
                       required
@@ -168,8 +200,9 @@ function Register() {
                   </div>
 
                   <div className="auth-field full">
-                    <label className="auth-label">Years of Experience</label>
+                    <label className="auth-label" htmlFor="register-experience">Years of Experience</label>
                     <input
+                      id="register-experience"
                       className="auth-input"
                       name="experience"
                       type="number"
